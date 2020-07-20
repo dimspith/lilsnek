@@ -1,15 +1,51 @@
-import draw, strutils, sync, threadpool
+import threadpool, locks, os
+import illwill
 
-proc getDimensionsFromUser(f: File): tuple[width, height: int] =
-  stdout.write "Stage width: "
-  result[0] = parseInt(readLine(f))
-  stdout.write "Stage height: "
-  result[1] = parseInt(readLine(f))
+var
+  thr: array[1, Thread[int]]
+  L: Lock
+
+proc exitProc() {.noconv.} =
+  illwillDeinit()
+  showCursor()
+  quit(0)
+
+proc getKeyInputs(n: int) {.thread.} =
+  while true:
+    acquire(L)
+    {.gcSafe.}:
+      var key = getKey()
+      case key:
+        of Key.None:
+          discard
+        of Key.Q:
+          release(L)
+          exitProc()
+        of Key.H:
+          echo "Left"
+        of Key.J:
+          echo "Down"
+        of Key.K:
+          echo "Up"
+        of Key.L:
+          echo "Right"
+        else: discard
+    release(L)
+    sleep 10
+
 
 proc main() =
-  let screen = getDimensionsFromUser(stdin)
-  spawn runKBHandler()
-  drawAnimation('#', screen[0], screen[1])
+  illwillInit(fullscreen=true)
+  setControlCHook(exitProc)
+  hideCursor()
+  createThread(thr[0], getKeyInputs, 0)
+
+  while true:
+    var tb = newTerminalBuffer(terminalWidth(), terminalHeight())
+    tb.drawRect(0, 0, tb.width-1, tb.height-1)
+    tb.display()
+    sleep(20)
+
 
 when isMainModule:
   main()
