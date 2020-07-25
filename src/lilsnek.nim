@@ -1,7 +1,8 @@
-import threadpool, locks, os
+import threadpool, locks, os, game
 import illwill
 
 var
+  gameobj = newGame()
   thr: array[1, Thread[int]]
   L: Lock
 
@@ -41,10 +42,7 @@ proc main() =
   createThread(thr[0], getKeyInputs, 0)
 
   while true:
-    var tb = newTerminalBuffer(terminalWidth(), terminalHeight())
-    tb.drawRect(0, 0, tb.width-1, tb.height-1)
-    tb.display()
-    sleep(20)
+
 
 
 when isMainModule:

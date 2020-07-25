@@ -1,1 +1,2 @@
 --passL:"-static"
+--threads:on
