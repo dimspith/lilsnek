@@ -2,7 +2,7 @@ import algorithm
 import times
 import os
 import illwill
-import sequtils, sugar
+# import sequtils, sugar
 
 type
   Direction* = enum
@@ -28,7 +28,9 @@ type
     isHead: bool
     direction: Direction
     
-  Snake* = seq[SnakeBody]
+  Snake* = object
+    body: seq[SnakeBody]
+    direction: DIRECTION
 
   Game* = ref object
     tb*: TerminalBuffer
@@ -50,7 +52,8 @@ func makeNewTileBoard(): CellMatrix[60,30] =
   tbd.fill(0, 59, emptyRow)
   return tbd
 
-const initialSnake*: Snake = @[
+const initialSnake*: Snake = Snake(
+  body: @[
     SnakeBody(
       x: 29,
       y: 15,
@@ -69,7 +72,9 @@ const initialSnake*: Snake = @[
       isHead: false,
       direction: LEFT
     )
-  ]
+  ],
+  direction: LEFT
+)
 
 
 proc newGame*(): Game =
@@ -79,26 +84,43 @@ proc newGame*(): Game =
     tileBoard: makeNewTileBoard(),
     startTime: now(),
     endTime: now(),
+    snake: initialSnake,
     score: 0,
     isPaused: false,
   )
 
-proc moveSnake(game: Game) =
+proc moveSnake(game: Game): Game =
   let move = kbChan.tryRecv()
   if move.dataAvailable:
     case move.msg:
-      of Direction.Left:
-        echo "Left"
-      of Direction.Down:
-        echo "Down"
-      of Direction.Up:
-        echo "Up"
-      of Direction.Right:
-        echo "Right"
+      of Direction.Left:  game.snake.direction = LEFT
+      of Direction.Down:  game.snake.direction = DOWN
+      of Direction.Up:    game.snake.direction = UP
+      of Direction.Right: game.snake.direction = RIGHT
       else: discard
+  game
 
-# proc nextFrame(game: Game) =
-  # snake.map()
+proc drawSnake(game: Game): Game =
+  var body = game.snake.body
+  for bodyPart in body:
+    if bodyPart.isHead:
+      game.tileBoard[bodyPart.x][bodyPart.y] = Cell(cType: HEAD)
+    else:
+      game.tileBoard[bodyPart.x][bodyPart.y] = Cell(cType: BODY)
+
+  for i in countdown(body.len-1, 0):
+    if body[i].isHead:
+      case game.snake.direction:
+        of LEFT:  dec(body[i].x)
+        of DOWN:  dec(body[i].y)
+        of UP:    inc(body[i].y)
+        of RIGHT: inc(body[i].x)
+        of NONE: discard
+    else:
+      body[i].x = body[i-1].x
+      body[i].y = body[i-1].y
+  game.snake.body = body
+  game
 
 iterator m2dpairs[X,Y: static[int], T](a: array[X,array[Y,T]]): tuple[x: int, y: int, elem: T] {.inline.} =
   for i in countup(1, X-1):
@@ -127,12 +149,13 @@ proc drawInfo(game: Game) =
   # game.tb.drawRect(0,0,60,30)
   # game.tb.drawHorizLine(1,59,28)
 
-proc redraw*(game: Game) =
+proc redraw*(game: var Game) =
   ## Redraws the screen, moving the snake forward and updating the tiles.
   game.tb = newTerminalBuffer(terminalWidth(), terminalHeight())
   game.drawInfo()
   game.drawBoard()
-  game.moveSnake()
+  game = game.drawSnake()
+  game = game.moveSnake()
   game.tb.display()
   sleep(500)
 
