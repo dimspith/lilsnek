@@ -1,49 +1,16 @@
-import threadpool, locks, os, game
+import os, game, keyboard, utils
 import illwill
 
-var
-  gameobj = newGame()
-  thr: array[1, Thread[int]]
-  L: Lock
-
-proc exitProc() {.noconv.} =
-  illwillDeinit()
-  showCursor()
-  quit(0)
-
-proc getKeyInputs(n: int) {.thread.} =
-  while true:
-    acquire(L)
-    {.gcSafe.}:
-      var key = getKey()
-      case key:
-        of Key.None:
-          discard
-        of Key.Q:
-          release(L)
-          exitProc()
-        of Key.H:
-          echo "Left"
-        of Key.J:
-          echo "Down"
-        of Key.K:
-          echo "Up"
-        of Key.L:
-          echo "Right"
-        else: discard
-    release(L)
-    sleep 10
-
+var gameobj = newGame()
 
 proc main() =
   illwillInit(fullscreen=true)
   setControlCHook(exitProc)
   hideCursor()
-  createThread(thr[0], getKeyInputs, 0)
-
+  kbChan.open()
+  runKBHandler()
   while true:
-
-
+    redraw(gameobj)
 
 when isMainModule:
   main()
