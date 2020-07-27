@@ -17,13 +17,13 @@ proc getKeyInputs() {.thread.} =
           release(L)
           exitProc()
         of Key.H:
-          kbChan.send(Direction.Left)
+          kbChan.send(LEFT)
         of Key.J:
-          kbChan.send(Direction.Down)
+          kbChan.send(DOWN)
         of Key.K:
-          kbChan.send(Direction.Up)
+          kbChan.send(UP)
         of Key.L:
-          kbChan.send(Direction.Right)
+          kbChan.send(RIGHT)
         else: discard
     release(L)
     sleep 10

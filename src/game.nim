@@ -71,6 +71,12 @@ const initialSnake*: Snake = Snake(
       y: 15,
       isHead: false,
       direction: LEFT
+    ),
+    SnakeBody(
+      x: 32,
+      y: 15,
+      isHead: false,
+      direction: LEFT
     )
   ],
   direction: LEFT
@@ -93,10 +99,10 @@ proc moveSnake(game: Game): Game =
   let move = kbChan.tryRecv()
   if move.dataAvailable:
     case move.msg:
-      of Direction.Left:  game.snake.direction = LEFT
-      of Direction.Down:  game.snake.direction = DOWN
-      of Direction.Up:    game.snake.direction = UP
-      of Direction.Right: game.snake.direction = RIGHT
+      of LEFT:  game.snake.direction = LEFT
+      of DOWN:  game.snake.direction = DOWN
+      of UP:    game.snake.direction = UP
+      of RIGHT: game.snake.direction = RIGHT
       else: discard
   game
 
@@ -108,12 +114,14 @@ proc drawSnake(game: Game): Game =
     else:
       game.tileBoard[bodyPart.x][bodyPart.y] = Cell(cType: BODY)
 
+  game.tileBoard[body[body.len-1].x][body[body.len-1].y] = Cell(cType: EMPTY)
+
   for i in countdown(body.len-1, 0):
     if body[i].isHead:
       case game.snake.direction:
         of LEFT:  dec(body[i].x)
-        of DOWN:  dec(body[i].y)
-        of UP:    inc(body[i].y)
+        of DOWN:  inc(body[i].y)
+        of UP:    dec(body[i].y)
         of RIGHT: inc(body[i].x)
         of NONE: discard
     else:
@@ -157,5 +165,5 @@ proc redraw*(game: var Game) =
   game = game.drawSnake()
   game = game.moveSnake()
   game.tb.display()
-  sleep(500)
+  sleep(300)
 
