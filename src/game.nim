@@ -108,13 +108,6 @@ proc moveSnake(game: Game): Game =
 
 proc drawSnake(game: Game): Game =
   var body = game.snake.body
-  for bodyPart in body:
-    if bodyPart.isHead:
-      game.tileBoard[bodyPart.x][bodyPart.y] = Cell(cType: HEAD)
-    else:
-      game.tileBoard[bodyPart.x][bodyPart.y] = Cell(cType: BODY)
-
-  game.tileBoard[body[body.len-1].x][body[body.len-1].y] = Cell(cType: EMPTY)
 
   for i in countdown(body.len-1, 0):
     if body[i].isHead:
@@ -127,6 +120,15 @@ proc drawSnake(game: Game): Game =
     else:
       body[i].x = body[i-1].x
       body[i].y = body[i-1].y
+
+  for bodyPart in body:
+    if bodyPart.isHead:
+      game.tileBoard[bodyPart.x][bodyPart.y] = Cell(cType: HEAD)
+    else:
+      game.tileBoard[bodyPart.x][bodyPart.y] = Cell(cType: BODY)
+
+  game.tileBoard[body[body.len-1].x][body[body.len-1].y] = Cell(cType: EMPTY)
+
   game.snake.body = body
   game
 
@@ -152,18 +154,16 @@ proc drawBoard(game: Game) =
         game.tb.write(x, y, " ")
         game.tb.resetAttributes()
             
-proc drawInfo(game: Game) =
+proc drawInfo*(game: Game) =
   game.tb.write(1, 31, "Use hjkl to move around, p to pause and q to quit")
   # game.tb.drawRect(0,0,60,30)
   # game.tb.drawHorizLine(1,59,28)
 
 proc redraw*(game: var Game) =
   ## Redraws the screen, moving the snake forward and updating the tiles.
-  game.tb = newTerminalBuffer(terminalWidth(), terminalHeight())
-  game.drawInfo()
   game.drawBoard()
-  game = game.drawSnake()
   game = game.moveSnake()
+  game = game.drawSnake()
   game.tb.display()
-  sleep(300)
+  sleep(180)
 
