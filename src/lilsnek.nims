@@ -1,2 +1,0 @@
---passL:"-static"
---threads:on

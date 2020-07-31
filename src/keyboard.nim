@@ -1,11 +1,16 @@
-import locks, os, utils, game
-from illwill import getKey, Key, write
+from locks    import Lock, acquire, release
+from os       import sleep
+from illwill  import getKey, Key, write, illwillDeinit
+import types
+import utils
 
 var
   thr: array[1, Thread[void]]
   L: Lock
+  kbChan*: Channel[Direction]
 
 proc getKeyInputs() {.thread.} =
+  ## Continuously get keypresses and send directions through the channel `kbChan`
   while true:
     acquire(L)
     {.gcSafe.}:

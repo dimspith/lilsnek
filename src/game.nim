@@ -1,101 +1,61 @@
 import algorithm
-import times
 import os
 import illwill
-# import sequtils, sugar
+import types, keyboard
 
-type
-  Direction* = enum
-    NONE, UP, DOWN, LEFT, RIGHT
+const initialSnake*: Snake =
+  Snake(
+  ## The initial snake consisting of 4 total cells in the middle of the screen
+    body: @[
+      SnakeBody(
+        x: 29,
+        y: 15,
+        isHead: true,
+        direction: LEFT
+      ),
+      SnakeBody(
+        x: 30,
+        y: 15,
+        isHead: false,
+        direction: LEFT
+      ),
+      SnakeBody(
+        x: 31,
+        y: 15,
+        isHead: false,
+        direction: LEFT
+      ),
+      SnakeBody(
+        x: 32,
+        y: 15,
+        isHead: false,
+        direction: LEFT
+      )
+    ],
+    direction: LEFT
+  )
 
-  CellType = enum
-    EMPTY,
-    HEAD,
-    BODY
-
-  Cell = object
-    case cType: CellType
-    of EMPTY: discard
-    of BODY: discard
-    of HEAD: discard
-
-  CellMatrix[W, H: static[int]] =
-    array[1..W, array[1..H, Cell]]
-
-  SnakeBody = object
-    x: int
-    y: int
-    isHead: bool
-    direction: Direction
-    
-  Snake* = object
-    body: seq[SnakeBody]
-    direction: DIRECTION
-
-  Game* = ref object
-    tb*: TerminalBuffer
-    tileBoard*: CellMatrix[60, 30]
-    snake*: Snake
-    startTime*: DateTime
-    endTime*: DateTime
-    score*: int
-    isPaused*: bool
-
-var kbChan*: Channel[Direction]
-
-func makeNewTileBoard(): CellMatrix[60,30] =
-  ## Make a new empty tileboard with a snake in the middle
-  # Initialize the tileboard
+func makeNewTileBoard*(): CellMatrix[60,30] =
+  ## Make a new empty tileboard
   var tbd: CellMatrix[60, 30]
   var emptyRow: array[0..29, Cell]
   emptyRow.fill(0, 29, Cell(cType: EMPTY))
   tbd.fill(0, 59, emptyRow)
   return tbd
 
-const initialSnake*: Snake = Snake(
-  body: @[
-    SnakeBody(
-      x: 29,
-      y: 15,
-      isHead: true,
-      direction: LEFT
-    ),
-    SnakeBody(
-      x: 30,
-      y: 15,
-      isHead: false,
-      direction: LEFT
-    ),
-    SnakeBody(
-      x: 31,
-      y: 15,
-      isHead: false,
-      direction: LEFT
-    ),
-    SnakeBody(
-      x: 32,
-      y: 15,
-      isHead: false,
-      direction: LEFT
-    )
-  ],
-  direction: LEFT
-)
-
-
 proc newGame*(): Game =
   ## Creates a game object containing the initial values of a new game.
   result = Game(
     tb: newTerminalBuffer(60, 30),
     tileBoard: makeNewTileBoard(),
-    startTime: now(),
-    endTime: now(),
     snake: initialSnake,
     score: 0,
     isPaused: false,
   )
 
-proc moveSnake(game: Game): Game =
+proc setSnakeDirection(game: Game): Game =
+  ## Attempts to receive a keypress from the keyboard channel and set the
+  ## snake's direction accordingly
   let move = kbChan.tryRecv()
   if move.dataAvailable:
     case move.msg:
@@ -107,6 +67,8 @@ proc moveSnake(game: Game): Game =
   game
 
 proc drawSnake(game: Game): Game =
+  ## Fetches the snake's values, moves the snake by one in the direction it's heading
+  ## and places it on the board
   var body = game.snake.body
 
   for i in countdown(body.len-1, 0):
@@ -155,15 +117,16 @@ proc drawBoard(game: Game) =
         game.tb.resetAttributes()
             
 proc drawInfo*(game: Game) =
+  ## Displays static elements i.e info, controls or decorations
   game.tb.write(1, 31, "Use hjkl to move around, p to pause and q to quit")
   # game.tb.drawRect(0,0,60,30)
   # game.tb.drawHorizLine(1,59,28)
 
 proc redraw*(game: var Game) =
-  ## Redraws the screen, moving the snake forward and updating the tiles.
+  ## Redraws the screen, updating everything
   game.drawBoard()
-  game = game.moveSnake()
+  game = game.setSnakeDirection()
   game = game.drawSnake()
   game.tb.display()
-  sleep(180)
+  sleep(150)
 

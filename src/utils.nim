@@ -1,5 +1,5 @@
 from illwill import illwillDeinit
-import terminal
+from terminal import showCursor
 
 proc exitProc*() {.noconv.} =
   illwillDeinit()

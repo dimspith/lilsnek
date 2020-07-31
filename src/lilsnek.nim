@@ -1,5 +1,7 @@
-import os, game, keyboard, utils
+import game, keyboard
 import illwill
+import terminal
+import utils
 
 var gameobj = newGame()
 
