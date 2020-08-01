@@ -13,7 +13,7 @@ proc main() =
 
   # Initialize the terminal buffer and draw everything that won't change later
   gameobj.tb = newTerminalBuffer(terminalWidth(), terminalHeight())
-  gameobj.drawInfo()
+  gameobj.drawStatic()
 
   # Redraw
   while true:

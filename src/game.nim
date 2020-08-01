@@ -1,4 +1,5 @@
 import algorithm
+import random
 import os
 import illwill
 import types, keyboard
@@ -34,7 +35,6 @@ func makeNewTileBoard*(): CellMatrix[60,30] =
   var emptyRow: array[0..29, Cell]
   emptyRow.fill(0, 29, Cell(cType: EMPTY))
   tbd.fill(0, 59, emptyRow)
-  tbd[12][14] = Cell(cType: FOOD)
   return tbd
 
 var gameobj*: Game = Game(
@@ -42,6 +42,7 @@ var gameobj*: Game = Game(
   tb: newTerminalBuffer(60, 30),
   tileBoard: makeNewTileBoard(),
   snake: initialSnake,
+  food: (rand(0..59), rand(0..29)),
   score: 0,
   isPaused: false,
 )
@@ -52,10 +53,26 @@ proc setSnakeDirection(game: Game): Game =
   let move = kbChan.tryRecv()
   if move.dataAvailable:
     case move.msg:
-      of LEFT:  game.snake.direction = LEFT
-      of DOWN:  game.snake.direction = DOWN
-      of UP:    game.snake.direction = UP
-      of RIGHT: game.snake.direction = RIGHT
+      of LEFT:
+        if game.snake.direction == RIGHT:
+          discard
+        else:
+          game.snake.direction = LEFT
+      of DOWN:
+        if game.snake.direction == UP:
+          discard
+        else:
+          game.snake.direction = DOWN
+      of UP:
+        if game.snake.direction == DOWN:
+          discard
+        else:
+          game.snake.direction = UP
+      of RIGHT:
+        if game.snake.direction == LEFT:
+          discard
+        else:
+          game.snake.direction = RIGHT
       else: discard
   game
 
@@ -98,6 +115,7 @@ proc moveAndDrawSnake(game: Game): Game =
         y: body[body.len - 1].y
       )
     )
+    game.food = (-1, -1)
       
   # Draw the snake's body
   for bodyPart in body[1..body.len-1]:
@@ -111,6 +129,13 @@ proc moveAndDrawSnake(game: Game): Game =
 
   game.snake.body = body
   game
+
+
+proc createFood(game: var Game) =
+  if game.food != (-1, -1):
+    game.tileBoard[game.food[0]][game.food[1]] = Cell(cType: FOOD)
+  else:
+    game.food = (rand(1..59), rand(1..29))
 
 iterator m2dpairs*[X,Y: static[int], T](a: array[X,array[Y,T]]): tuple[x: int, y: int, elem: T] {.inline.} =
   ## Iterator that traverses a 2d array and returns elements and indexes
@@ -138,8 +163,11 @@ func drawBoard(game: Game) =
         game.tb.setBackgroundColor(bgGreen)
         game.tb.write(x, y, " ")
         game.tb.resetAttributes()
-            
-proc drawInfo*(game: Game) =
+
+proc drawInfo(game: Game) =
+  discard
+
+proc drawStatic*(game: Game) =
   ## Displays static elements i.e info, controls or decorations
   game.tb.write(1, 31, "Use hjkl to move around, p to pause and q to quit")
   game.tb.drawRect(0,0,60,30)
@@ -148,8 +176,10 @@ proc drawInfo*(game: Game) =
 proc redraw*(game: var Game) =
   ## Redraws the screen, updating everything
   game.drawBoard()
+  game.drawInfo()
+  game.createFood()
   game = game.setSnakeDirection()
   game = game.moveAndDrawSnake()
   game.tb.display()
-  sleep(150)
+  sleep(120)
 

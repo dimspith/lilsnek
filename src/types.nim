@@ -32,5 +32,6 @@ type
     tb*: TerminalBuffer
     tileBoard*: CellMatrix[60, 30]
     snake*: Snake
+    food*: (int, int)
     score*: int
     isPaused*: bool
