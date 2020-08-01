@@ -1,3 +1,4 @@
+import random
 import game, keyboard
 import illwill
 import terminal
@@ -14,6 +15,8 @@ proc main() =
   # Initialize the terminal buffer and draw everything that won't change later
   gameobj.tb = newTerminalBuffer(terminalWidth(), terminalHeight())
   gameobj.drawStatic()
+
+  randomize()
 
   # Redraw
   while true:

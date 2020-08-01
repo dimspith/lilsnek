@@ -42,7 +42,7 @@ var gameobj*: Game = Game(
   tb: newTerminalBuffer(60, 30),
   tileBoard: makeNewTileBoard(),
   snake: initialSnake,
-  food: (rand(0..59), rand(0..29)),
+  food: (rand(1..59), rand(1..29)),
   score: 0,
   isPaused: false,
 )
@@ -115,6 +115,8 @@ proc moveAndDrawSnake(game: Game): Game =
         y: body[body.len - 1].y
       )
     )
+
+    # Mark food as consumed
     game.food = (-1, -1)
       
   # Draw the snake's body
@@ -165,6 +167,8 @@ func drawBoard(game: Game) =
         game.tb.resetAttributes()
 
 proc drawInfo(game: Game) =
+  game.tb.write(1,34,"           ")
+  game.tb.write(1, 34, $game.food)
   discard
 
 proc drawStatic*(game: Game) =
@@ -182,4 +186,3 @@ proc redraw*(game: var Game) =
   game = game.moveAndDrawSnake()
   game.tb.display()
   sleep(120)
-
