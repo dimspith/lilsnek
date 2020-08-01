@@ -2,6 +2,7 @@ import algorithm
 import os
 import illwill
 import types, keyboard
+from utils import exitProc
 
 const initialSnake*: Snake =
   Snake(
@@ -10,26 +11,18 @@ const initialSnake*: Snake =
       SnakeBody(
         x: 29,
         y: 15,
-        isHead: true,
-        direction: LEFT
       ),
       SnakeBody(
         x: 30,
         y: 15,
-        isHead: false,
-        direction: LEFT
       ),
       SnakeBody(
         x: 31,
         y: 15,
-        isHead: false,
-        direction: LEFT
       ),
       SnakeBody(
         x: 32,
         y: 15,
-        isHead: false,
-        direction: LEFT
       )
     ],
     direction: LEFT
@@ -41,17 +34,17 @@ func makeNewTileBoard*(): CellMatrix[60,30] =
   var emptyRow: array[0..29, Cell]
   emptyRow.fill(0, 29, Cell(cType: EMPTY))
   tbd.fill(0, 59, emptyRow)
+  tbd[12][14] = Cell(cType: FOOD)
   return tbd
 
-proc newGame*(): Game =
-  ## Creates a game object containing the initial values of a new game.
-  result = Game(
-    tb: newTerminalBuffer(60, 30),
-    tileBoard: makeNewTileBoard(),
-    snake: initialSnake,
-    score: 0,
-    isPaused: false,
-  )
+var gameobj*: Game = Game(
+  ## The initial game's values
+  tb: newTerminalBuffer(60, 30),
+  tileBoard: makeNewTileBoard(),
+  snake: initialSnake,
+  score: 0,
+  isPaused: false,
+)
 
 proc setSnakeDirection(game: Game): Game =
   ## Attempts to receive a keypress from the keyboard channel and set the
@@ -66,40 +59,66 @@ proc setSnakeDirection(game: Game): Game =
       else: discard
   game
 
-proc drawSnake(game: Game): Game =
+proc moveAndDrawSnake(game: Game): Game =
   ## Fetches the snake's values, moves the snake by one in the direction it's heading
   ## and places it on the board
   var body = game.snake.body
 
-  for i in countdown(body.len-1, 0):
-    if body[i].isHead:
-      case game.snake.direction:
-        of LEFT:  dec(body[i].x)
-        of DOWN:  inc(body[i].y)
-        of UP:    dec(body[i].y)
-        of RIGHT: inc(body[i].x)
-        of NONE: discard
-    else:
+  # Move all bodyparts except for the head
+  for i in countdown(body.len-1, 1):
       body[i].x = body[i-1].x
       body[i].y = body[i-1].y
 
-  for bodyPart in body:
-    if bodyPart.isHead:
-      game.tileBoard[bodyPart.x][bodyPart.y] = Cell(cType: HEAD)
-    else:
-      game.tileBoard[bodyPart.x][bodyPart.y] = Cell(cType: BODY)
+  # Move the snake's head in the correct direction
+  case game.snake.direction:
+    of LEFT:
+      if body[0].x == 1:
+        exitProc()
+      dec(body[0].x)
+    of DOWN:
+      if body[0].y == 30:
+        exitProc()
+      inc(body[0].y)
+    of UP:
+      if body[0].y == 1:
+        exitProc()
+      dec(body[0].y)
+    of RIGHT:
+      if body[0].x == 60:
+        exitProc()
+      inc(body[0].x)
+    of NONE:
+      discard
 
+  # If the snake ate food add one to it's body
+  if game.tileBoard[body[0].x][body[0].y].cType == FOOD:
+    body.add(
+      SnakeBody(
+        x: body[body.len - 1].x,
+        y: body[body.len - 1].y
+      )
+    )
+      
+  # Draw the snake's body
+  for bodyPart in body[1..body.len-1]:
+    game.tileBoard[bodyPart.x][bodyPart.y] = Cell(cType: BODY)
+
+  # Draw the head
+  game.tileBoard[body[0].x][body[0].y] = Cell(cType: HEAD)
+
+  # Empty the last tile before we moved the snake
   game.tileBoard[body[body.len-1].x][body[body.len-1].y] = Cell(cType: EMPTY)
 
   game.snake.body = body
   game
 
-iterator m2dpairs[X,Y: static[int], T](a: array[X,array[Y,T]]): tuple[x: int, y: int, elem: T] {.inline.} =
+iterator m2dpairs*[X,Y: static[int], T](a: array[X,array[Y,T]]): tuple[x: int, y: int, elem: T] {.inline.} =
+  ## Iterator that traverses a 2d array and returns elements and indexes
   for i in countup(1, X-1):
     for j in countup(1, Y-1):
       yield (i, j, a[i][j])
     
-proc drawBoard(game: Game) =
+func drawBoard(game: Game) =
   ## Draws the game board and colors cells accordingly.
   for x, y, cell in m2dpairs(game.tileBoard):
     case cell.cType:
@@ -115,18 +134,22 @@ proc drawBoard(game: Game) =
         game.tb.setBackgroundColor(bgRed)
         game.tb.write(x, y, " ")
         game.tb.resetAttributes()
+      of FOOD:
+        game.tb.setBackgroundColor(bgGreen)
+        game.tb.write(x, y, " ")
+        game.tb.resetAttributes()
             
 proc drawInfo*(game: Game) =
   ## Displays static elements i.e info, controls or decorations
   game.tb.write(1, 31, "Use hjkl to move around, p to pause and q to quit")
-  # game.tb.drawRect(0,0,60,30)
+  game.tb.drawRect(0,0,60,30)
   # game.tb.drawHorizLine(1,59,28)
 
 proc redraw*(game: var Game) =
   ## Redraws the screen, updating everything
   game.drawBoard()
   game = game.setSnakeDirection()
-  game = game.drawSnake()
+  game = game.moveAndDrawSnake()
   game.tb.display()
   sleep(150)
 

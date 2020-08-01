@@ -3,8 +3,6 @@ import illwill
 import terminal
 import utils
 
-var gameobj = newGame()
-
 proc main() =
   # Start illwill in fullscreen mode and run the keyboard handler
   illwillInit(fullscreen=true)
