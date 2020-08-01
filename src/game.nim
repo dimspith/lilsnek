@@ -88,24 +88,15 @@ proc moveAndDrawSnake(game: Game): Game =
 
   # Move the snake's head in the correct direction
   case game.snake.direction:
-    of LEFT:
-      if body[0].x == 1:
-        exitProc()
-      dec(body[0].x)
-    of DOWN:
-      if body[0].y == 30:
-        exitProc()
-      inc(body[0].y)
-    of UP:
-      if body[0].y == 1:
-        exitProc()
-      dec(body[0].y)
-    of RIGHT:
-      if body[0].x == 60:
-        exitProc()
-      inc(body[0].x)
+    of LEFT:  dec(body[0].x)
+    of DOWN:  inc(body[0].y)
+    of UP:    dec(body[0].y)
+    of RIGHT: inc(body[0].x)
     of NONE:
       discard
+
+  if not(body[0].x in 1..60): exitProc()
+  elif not(body[0].y in 1..30): exitProc()
 
   # If the snake ate food add one to it's body
   if game.tileBoard[body[0].x][body[0].y].cType == FOOD:
@@ -167,15 +158,16 @@ func drawBoard(game: Game) =
         game.tb.resetAttributes()
 
 proc drawInfo(game: Game) =
-  game.tb.write(1,34,"           ")
+  # Displays dynamic info like score, debug e.t.c
+  game.tb.write(1, 34,"           ")
   game.tb.write(1, 34, $game.food)
+  game.tb.write(1, 35, $game.snake.body[0])
   discard
 
 proc drawStatic*(game: Game) =
   ## Displays static elements i.e info, controls or decorations
   game.tb.write(1, 31, "Use hjkl to move around, p to pause and q to quit")
   game.tb.drawRect(0,0,60,30)
-  # game.tb.drawHorizLine(1,59,28)
 
 proc redraw*(game: var Game) =
   ## Redraws the screen, updating everything
