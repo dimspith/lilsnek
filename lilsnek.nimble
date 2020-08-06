@@ -7,8 +7,7 @@ license       = "ISC"
 srcDir        = "src"
 bin           = @["lilsnek"]
 
-
-
+backend       = "c"
 # Dependencies
 
 requires "nim >= 1.2.4"

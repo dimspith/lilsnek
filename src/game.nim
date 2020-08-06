@@ -11,29 +11,29 @@ const initialSnake*: Snake =
     body: @[
       SnakeBody(
         x: 29,
-        y: 15,
+        y: 10,
       ),
       SnakeBody(
         x: 30,
-        y: 15,
+        y: 10,
       ),
       SnakeBody(
         x: 31,
-        y: 15,
+        y: 10,
       ),
       SnakeBody(
         x: 32,
-        y: 15,
+        y: 10,
       )
     ],
     direction: LEFT
   )
 
-func makeNewTileBoard*(): CellMatrix[60,30] =
+func makeNewTileBoard*(): CellMatrix[60,20] =
   ## Make a new empty tileboard
-  var tbd: CellMatrix[60, 30]
-  var emptyRow: array[0..29, Cell]
-  emptyRow.fill(0, 29, Cell(cType: EMPTY))
+  var tbd: CellMatrix[60, 20]
+  var emptyRow: array[0..19, Cell]
+  emptyRow.fill(0, 19, Cell(cType: EMPTY))
   tbd.fill(0, 59, emptyRow)
   return tbd
 
@@ -42,7 +42,7 @@ var gameobj*: Game = Game(
   tb: newTerminalBuffer(60, 30),
   tileBoard: makeNewTileBoard(),
   snake: initialSnake,
-  food: (rand(1..59), rand(1..29)),
+  food: (rand(1..59), rand(2..29)),
   score: 0,
   isPaused: false,
 )
@@ -95,8 +95,14 @@ proc moveAndDrawSnake(game: Game): Game =
     of NONE:
       discard
 
+  # End the game if the snake moves out of bounds
   if not(body[0].x in 1..60): exitProc()
-  elif not(body[0].y in 1..30): exitProc()
+  elif not(body[0].y in 2..20): exitProc()
+
+  #End the snake if the snake bumps inot itself
+  for bodyPart in body[1..body.len-1]:
+    if body[0].x == bodyPart.x and body[0].y == bodyPart.y:
+      exitProc()
 
   # If the snake ate food add one to it's body
   if game.tileBoard[body[0].x][body[0].y].cType == FOOD:
@@ -109,6 +115,7 @@ proc moveAndDrawSnake(game: Game): Game =
 
     # Mark food as consumed
     game.food = (-1, -1)
+    game.score+=10
       
   # Draw the snake's body
   for bodyPart in body[1..body.len-1]:
@@ -125,10 +132,11 @@ proc moveAndDrawSnake(game: Game): Game =
 
 
 proc createFood(game: var Game) =
+  ## If the food has been eaten create it
   if game.food != (-1, -1):
     game.tileBoard[game.food[0]][game.food[1]] = Cell(cType: FOOD)
   else:
-    game.food = (rand(1..59), rand(1..29))
+    game.food = (rand(1..59), rand(2..19))
 
 iterator m2dpairs*[X,Y: static[int], T](a: array[X,array[Y,T]]): tuple[x: int, y: int, elem: T] {.inline.} =
   ## Iterator that traverses a 2d array and returns elements and indexes
@@ -158,23 +166,24 @@ func drawBoard(game: Game) =
         game.tb.resetAttributes()
 
 proc drawInfo(game: Game) =
-  # Displays dynamic info like score, debug e.t.c
-  game.tb.write(1, 34,"           ")
-  game.tb.write(1, 34, $game.food)
-  game.tb.write(1, 35, $game.snake.body[0])
+  ## Displays dynamic info like score, debug e.t.c
+  game.tb.write(1, 24, "           ")
+  game.tb.write(1, 24, $game.food)
+  game.tb.write(1, 25, $game.snake.body[0])
+  game.tb.write(1, 26, "Score: " & $game.score)
   discard
 
 proc drawStatic*(game: Game) =
   ## Displays static elements i.e info, controls or decorations
-  game.tb.write(1, 31, "Use hjkl to move around, p to pause and q to quit")
-  game.tb.drawRect(0,0,60,30)
+  game.tb.write(1, 21, "Use hjkl/wasd to move around, p to pause and q to quit")
+  game.tb.drawRect(0,0,60,20)
 
 proc redraw*(game: var Game) =
   ## Redraws the screen, updating everything
   game.drawBoard()
-  game.drawInfo()
   game.createFood()
   game = game.setSnakeDirection()
   game = game.moveAndDrawSnake()
+  game.drawInfo()
   game.tb.display()
-  sleep(120)
+  sleep(150)

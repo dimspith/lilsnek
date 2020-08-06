@@ -21,13 +21,13 @@ proc getKeyInputs() {.thread.} =
         of Key.Q:
           release(L)
           exitProc()
-        of Key.H:
+        of Key.H, Key.A:
           kbChan.send(LEFT)
-        of Key.J:
+        of Key.J, Key.S:
           kbChan.send(DOWN)
-        of Key.K:
+        of Key.K, Key.W:
           kbChan.send(UP)
-        of Key.L:
+        of Key.L, Key.D:
           kbChan.send(RIGHT)
         else: discard
     release(L)

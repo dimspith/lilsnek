@@ -30,7 +30,7 @@ type
 
   Game* = ref object
     tb*: TerminalBuffer
-    tileBoard*: CellMatrix[60, 30]
+    tileBoard*: CellMatrix[60, 20]
     snake*: Snake
     food*: (int, int)
     score*: int

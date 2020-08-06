@@ -12,13 +12,14 @@ proc main() =
   kbChan.open()
   runKBHandler()
 
-  # Initialize the terminal buffer and draw everything that won't change later
+  # Initialize the terminal buffer and draw all static elements
   gameobj.tb = newTerminalBuffer(terminalWidth(), terminalHeight())
   gameobj.drawStatic()
 
+  # Initialize the randomizer
   randomize()
 
-  # Redraw
+  # Redraw the screen continuously
   while true:
     redraw(gameobj)
 
