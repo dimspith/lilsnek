@@ -168,8 +168,8 @@ func drawBoard(game: Game) =
 proc drawInfo(game: Game) =
   ## Displays dynamic info like score, debug e.t.c
   game.tb.write(1, 24, "           ")
-  game.tb.write(1, 24, $game.food)
-  game.tb.write(1, 25, $game.snake.body[0])
+  # game.tb.write(1, 24, $game.food)
+  # game.tb.write(1, 25, $game.snake.body[0])
   game.tb.write(1, 26, "Score: " & $game.score)
   discard
 
@@ -177,6 +177,9 @@ proc drawStatic*(game: Game) =
   ## Displays static elements i.e info, controls or decorations
   game.tb.write(1, 21, "Use hjkl/wasd to move around, p to pause and q to quit")
   game.tb.drawRect(0,0,60,20)
+
+proc drawLossScreen*(game:Game) =
+  discard
 
 proc redraw*(game: var Game) =
   ## Redraws the screen, updating everything
