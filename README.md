@@ -1,7 +1,12 @@
 # Lilsnek
+
+A terminal snake game
+
+![dfs](https://raw.githubusercontent.com/dimspith/lilsnek/master/preview.svg)
+
 ### Overview
 
-**Lilsnek** is a simple snake game for the average bored t`erminal user. It aims to be small and portable because nobody wants extra dependencies for something so simple.
+**Lilsnek** is a simple snake game for the average bored terminal user. It aims to be small and portable because nobody wants extra dependencies for something so simple.
 
 **Warning: It is not yet complete so some bugs are still present and more features are to be added**
 
